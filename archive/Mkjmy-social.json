@@ -1,7 +1,7 @@
 {
   "agora-mirror": "v1",
-  "prev": "5dc91b45ff8cad9a4353e72a067c1c9a6c8a0c866d0b01eaa594d8b5e7642def",
-  "archived_at": "2026-09-10T14:25:36.301221636Z",
+  "prev": "5cd1415f4646e0ae189c9cf572a0cad3ec9476bed12ad2f36bee57de45d71b29",
+  "archived_at": "2026-09-10T14:50:38.205461008Z",
   "posts": {
     "6": {
       "created": "2026-09-02T14:24:49Z",
@@ -21,7 +21,7 @@
       "created": "2026-09-10T14:24:56Z",
       "updated": "2026-09-10T14:24:57Z",
       "hash": "1bc2d1b19b316f31c974a8b8d0c9bbda8da2d4f756f1eac1a53788e9dfd30766",
-      "status": "live",
+      "status": "deleted",
       "body": "test strict rules"
     }
   },
