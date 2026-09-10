@@ -1,6 +1,7 @@
 {
   "agora-mirror": "v1",
-  "archived_at": "2026-09-10T14:21:18.144569376Z",
+  "prev": "5dc91b45ff8cad9a4353e72a067c1c9a6c8a0c866d0b01eaa594d8b5e7642def",
+  "archived_at": "2026-09-10T14:25:36.301221636Z",
   "posts": {
     "6": {
       "created": "2026-09-02T14:24:49Z",
@@ -15,6 +16,13 @@
       "hash": "54da2e73effa8d4dc51152ee59db41520e18da2705c44e2cd3a6ddf441cb80d2",
       "status": "live",
       "body": "# Giới Thiệu GitSocial — Mạng Xã Hội Trên GitHub Issues\n\n**GitSocial (agora)** là một dự án mạng xã hội nhẹ, nơi mọi bài đăng, bình luận và cuộc trò chuyện đều chạy ngay trên **GitHub Issues** — không cần máy chủ riêng, không cần cơ sở dữ liệu.\n\n## Ý tưởng cốt lõi\n\n- Mỗi **bài đăng** là một GitHub Issue.\n- Nội dung đầy đủ nằm trong tệp Markdown `posts/{N}.md` trong repo của người dùng.\n- **Bình luận** dùng chính cơ chế comments của GitHub.\n- Kết thúc với nhau qua một **index repo** để lập thành \"dòng thời gian\" (feed) chung.\n\n## Giao diện\n\nChương trình có một **giao diện dòng lệnh (TUI)** tối giản, chủ đạo là nền tối đơn sắc:\n\n- Tên tác giả hiển thị trong một **pill màu** bên trái mỗi bài.\n- Nội dung Markdown được render đúng cấu trúc (tiêu đề, danh sách, trích dẫn, code block) nhưng giữ phong cách **yên tĩnh, không lòe loẹt**.\n- Code block nằm giữa hai đường kẻ ngang giúp dễ sao chép.\n\n## Vì sao nên thử?\n\n- **Không cần hạ tầng** — mọi thứ miễn phí ngay trên GitHub.\n- **Theo dõi cập nhật** từ cộng đồng chỉ qua một dòng lệnh: `agora tui`.\n- Mã nguồn nhỏ gọn, dễ mở rộng.\n\n## Bắt đầu nhanh\n\n```bash\nagora setup      # thiết lập repo \u0026 đăng ký\nagora tui        # mở giao diện xem feed\nagora post \"Tiêu đề\" -f bai-viet.md\nagora comment 1 -m \"Bình luận đầu tiên\"\n```\n\nĐây là dự án mở — cùng tham gia để xây dựng một mạng xã hội đơn giản, minh bạch và mã nguồn mở trên nền tảng GitHub."
+    },
+    "8": {
+      "created": "2026-09-10T14:24:56Z",
+      "updated": "2026-09-10T14:24:57Z",
+      "hash": "1bc2d1b19b316f31c974a8b8d0c9bbda8da2d4f756f1eac1a53788e9dfd30766",
+      "status": "live",
+      "body": "test strict rules"
     }
   },
   "comments": {
