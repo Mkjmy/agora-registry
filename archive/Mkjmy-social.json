@@ -1,79 +1,23 @@
 {
-  "prev": "63dae7c8f3299eabbcfed0a8a4edcd4a67c298893ebd2a196d6c657941532821",
-  "archived_at": "2026-09-06T13:23:09.598774342Z",
+  "agora-mirror": "v1",
+  "archived_at": "2026-09-10T14:21:18.144569376Z",
   "posts": {
     "6": {
       "created": "2026-09-02T14:24:49Z",
-      "updated": "2026-09-05T14:51:35Z",
+      "updated": "2026-09-10T14:20:23Z",
       "hash": "f5f43ca7ae327cb9dfcf833247f3d355d4c9dd8b4eca8d45dc87515ac2787333",
       "status": "live",
       "body": "# Thế Chiến Thứ Hai: Cuộc Chiến Đổi Lại Thế Giới\n\nChiến tranh thế giới thứ hai (1939–1945) là cuộc xung đột quân sự lớn nhất và đẫm máu nhất trong lịch sử nhân loại, lôi kéo hơn 30 quốc gia và gần 100 triệu người lính tham chiến.\n\n## Nguyên nhân dẫn đến chiến tranh\n\n- Hậu quả nặng nề của **Hiệp ước Versailles** (1919) và sự phẫn nộ của nước Đức.\n- Khủng hoảng kinh tế toàn cầu 1929 – 1933 dẫn đến sự trỗi dậy của chủ nghĩa phát xít.\n- Chính sách **nhân nhượng** của Anh và Pháp đối với Hitler.\n\n\u003e \"Hòa bình trong thời đại của chúng ta\" — Neville Chamberlain, 1938.\n\n## Diễn biến chính\n\n1. **1939** – Đức tấn công Ba Lan, khơi mào chiến tranh ở châu Âu.\n2. **1941** – Đức tấn công Liên Xô (Chiến dịch Barbarossa); Nhật tấn công Trân Châu Cảng.\n3. **1944** – Quân Đồng minh đổ bộ Normandy (D-Day).\n4. **1945** – Đức đầu hàng (tháng 5); Nhật đầu hàng sau hai quả bom nguyên tử (tháng 8).\n\n## Hệ quả\n\n- Khoảng 60–85 triệu người thiệt mạng.\n- Sự thành lập **Liên Hợp Quốc** (1945) để duy trì hòa bình.\n- Khởi đầu **Chiến tranh Lạnh** giữa hai siêu cường Mỹ – Liên Xô.\n\n## Bài học\n\nCuộc chiến nhắc nhở chúng ta về cái giá khủng khiếp của chiến tranh, và tầm quan trọng của ngoại giao, hòa bình và hợp tác quốc tế."
     },
     "7": {
       "created": "2026-09-02T14:25:03Z",
-      "updated": "2026-09-06T04:40:01Z",
+      "updated": "2026-09-10T14:20:21Z",
       "hash": "54da2e73effa8d4dc51152ee59db41520e18da2705c44e2cd3a6ddf441cb80d2",
       "status": "live",
       "body": "# Giới Thiệu GitSocial — Mạng Xã Hội Trên GitHub Issues\n\n**GitSocial (agora)** là một dự án mạng xã hội nhẹ, nơi mọi bài đăng, bình luận và cuộc trò chuyện đều chạy ngay trên **GitHub Issues** — không cần máy chủ riêng, không cần cơ sở dữ liệu.\n\n## Ý tưởng cốt lõi\n\n- Mỗi **bài đăng** là một GitHub Issue.\n- Nội dung đầy đủ nằm trong tệp Markdown `posts/{N}.md` trong repo của người dùng.\n- **Bình luận** dùng chính cơ chế comments của GitHub.\n- Kết thúc với nhau qua một **index repo** để lập thành \"dòng thời gian\" (feed) chung.\n\n## Giao diện\n\nChương trình có một **giao diện dòng lệnh (TUI)** tối giản, chủ đạo là nền tối đơn sắc:\n\n- Tên tác giả hiển thị trong một **pill màu** bên trái mỗi bài.\n- Nội dung Markdown được render đúng cấu trúc (tiêu đề, danh sách, trích dẫn, code block) nhưng giữ phong cách **yên tĩnh, không lòe loẹt**.\n- Code block nằm giữa hai đường kẻ ngang giúp dễ sao chép.\n\n## Vì sao nên thử?\n\n- **Không cần hạ tầng** — mọi thứ miễn phí ngay trên GitHub.\n- **Theo dõi cập nhật** từ cộng đồng chỉ qua một dòng lệnh: `agora tui`.\n- Mã nguồn nhỏ gọn, dễ mở rộng.\n\n## Bắt đầu nhanh\n\n```bash\nagora setup      # thiết lập repo \u0026 đăng ký\nagora tui        # mở giao diện xem feed\nagora post \"Tiêu đề\" -f bai-viet.md\nagora comment 1 -m \"Bình luận đầu tiên\"\n```\n\nĐây là dự án mở — cùng tham gia để xây dựng một mạng xã hội đơn giản, minh bạch và mã nguồn mở trên nền tảng GitHub."
     }
   },
   "comments": {
-    "@5552481440#0": {
-      "created": "2026-09-05T14:29:45Z",
-      "updated": "2026-09-05T14:29:45Z",
-      "hash": "e9058ab198f6908f702111b0c0fb5b36f99d00554521886c40e2891b349dc7a1",
-      "status": "live",
-      "body": "yo"
-    },
-    "@5552482594#0": {
-      "created": "2026-09-05T14:29:58Z",
-      "updated": "2026-09-05T14:29:58Z",
-      "hash": "fa690b82061edfd2852629aeba8a8977b57e40fcb77d1a7a28b26cba62591204",
-      "status": "live",
-      "body": "hey"
-    },
-    "@5556292436#0": {
-      "created": "2026-09-06T02:15:08Z",
-      "updated": "2026-09-06T02:15:08Z",
-      "hash": "fa690b82061edfd2852629aeba8a8977b57e40fcb77d1a7a28b26cba62591204",
-      "status": "live",
-      "body": "hey"
-    },
-    "@5556302183#0": {
-      "created": "2026-09-06T02:17:06Z",
-      "updated": "2026-09-06T02:17:06Z",
-      "hash": "fa690b82061edfd2852629aeba8a8977b57e40fcb77d1a7a28b26cba62591204",
-      "status": "live",
-      "body": "hey"
-    },
-    "@5556302201#0": {
-      "created": "2026-09-06T02:17:06Z",
-      "updated": "2026-09-06T02:17:06Z",
-      "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-      "status": "live",
-      "body": "hello"
-    },
-    "@5556346701#0": {
-      "created": "2026-09-06T02:26:53Z",
-      "updated": "2026-09-06T02:26:53Z",
-      "hash": "aaa9402664f1a41f40ebbc52c9993eb66aeb366602958fdfaa283b71e64db123",
-      "status": "live",
-      "body": "h"
-    },
-    "@5556353099#0": {
-      "created": "2026-09-06T02:28:21Z",
-      "updated": "2026-09-06T02:28:21Z",
-      "hash": "ea42241ea6e1e7c8f040eb1298ea108dec942367fd18c8cc54bcf98a1fe383dd",
-      "status": "live",
-      "body": "heheh"
-    },
-    "@5556353107#0": {
-      "created": "2026-09-06T02:28:21Z",
-      "updated": "2026-09-06T02:28:21Z",
-      "hash": "9157016056715eefb0e07fc58a41b8bc7a148b4e2d91a9a10857520111ce41f2",
-      "status": "live",
-      "body": "hdidasid"
-    },
     "@5556805265#0": {
       "created": "2026-09-06T04:08:58Z",
       "updated": "2026-09-06T04:08:58Z",
