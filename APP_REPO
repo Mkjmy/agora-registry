@@ -1,0 +1,3 @@
+# Đường dẫn kho app agora mà workflow "sync-names" dùng để build CLI.
+# Tự động cập nhật bởi "agora rename" khi account của chủ app đổi tên.
+Mkjmy/agora

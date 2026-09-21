@@ -24,11 +24,13 @@ jobs:
         with:
           go-version: "stable"
 
-      - name: Clone + build agora (app repo là private → dùng admin token)
+      - name: Clone + build agora (app repo private → dùng admin token)
         env:
           AGORA_ADMIN_TOKEN: ${{ secrets.AGORA_ADMIN_TOKEN }}
         run: |
-          git clone --depth 1 --quiet "https://x-access-token:${AGORA_ADMIN_TOKEN}@github.com/Mkjmy/agora.git" app
+          APP_REPO="$(head -1 APP_REPO 2>/dev/null)"
+          [ -n "$APP_REPO" ] || APP_REPO="Mkjmy/agora"
+          git clone --depth 1 --quiet "https://x-access-token:${AGORA_ADMIN_TOKEN}@github.com/${APP_REPO}.git" app
           (cd app && go build -o ../agora ./cmd/agora)
 
       - name: Sync NAMES
