@@ -28,7 +28,7 @@ jobs:
         env:
           AGORA_ADMIN_TOKEN: ${{ secrets.AGORA_ADMIN_TOKEN }}
         run: |
-          APP_REPO="$(head -1 APP_REPO 2>/dev/null)"
+          APP_REPO="$(grep -v '^#' APP_REPO 2>/dev/null | head -1)"
           [ -n "$APP_REPO" ] || APP_REPO="Mkjmy/agora"
           git clone --depth 1 --quiet "https://x-access-token:${AGORA_ADMIN_TOKEN}@github.com/${APP_REPO}.git" app
           (cd app && go build -o ../agora ./cmd/agora)
