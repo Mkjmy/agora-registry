@@ -1,0 +1,45 @@
+name: sync-names
+
+# "Danh sách tên" TẬP TRUNG của index: file NAMES (nickname | login | uid |
+# owner | repo | repo-hash). Sau mỗi sự kiện issue — register (opened),
+# approve/reject (labeled/unlabeled), rename (edited), reject+đóng (closed) —
+# workflow này tái sinh NAMES từ các issue member và commit về repo index.
+# Người đọc lấy file qua raw.githubusercontent: 1 request, không ăn rate limit.
+
+on:
+  issues:
+    types: [opened, edited, closed, labeled, unlabeled]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: app
+          repository: Mkjmy/agora
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Build agora
+        run: (cd app && go build -o ../agora .)
+
+      - name: Sync NAMES
+        run: |
+          ./agora names --index "${GITHUB_REPOSITORY}" > NAMES.new
+          if ! cmp -s NAMES NAMES.new; then
+            mv NAMES.new NAMES
+            git config user.name "agora-sync"
+            git config user.email "agora-sync@users.noreply.github.com"
+            git add NAMES
+            git commit -m "sync NAMES (trigger: ${{ github.event.action }})"
+            git push
+          fi
