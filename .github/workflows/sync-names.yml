@@ -19,18 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: app
-          repository: Mkjmy/agora
-
-      - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
           go-version: "stable"
 
-      - name: Build agora
-        run: (cd app && go build -o ../agora .)
+      - name: Clone + build agora
+        run: |
+          git clone --depth 1 --quiet https://github.com/Mkjmy/agora.git app
+          (cd app && go build -o ../agora ./cmd/agora)
 
       - name: Sync NAMES
         run: |
