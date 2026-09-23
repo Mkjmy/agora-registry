@@ -11,6 +11,14 @@ on:
     types: [opened, edited, closed, labeled, unlabeled]
   workflow_dispatch:
 
+# Chỉ chạy MỘT lượt sync mỗi lúc (đề phòng nhiều event issue trùng giờ);
+# lượt mới đợi lượt cũ xong thay vì bị huỷ giữa chừng. Kết hợp với vòng
+# pull --rebase + push retry bên dưới để không bao giờ "lost update" khi hai
+# lượt chạy song song.
+concurrency:
+  group: sync-names
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -36,11 +44,29 @@ jobs:
       - name: Sync NAMES
         run: |
           ./agora names --index "${GITHUB_REPOSITORY}" > NAMES.new
-          if ! cmp -s NAMES NAMES.new; then
-            mv NAMES.new NAMES
-            git config user.name "agora-sync"
-            git config user.email "agora-sync@users.noreply.github.com"
-            git add NAMES
-            git commit -m "sync NAMES (trigger: ${{ github.event.action }})"
-            git push
+          if cmp -s NAMES NAMES.new; then
+            exit 0
           fi
+          mv NAMES.new NAMES
+          git config user.name "agora-sync"
+          git config user.email "agora-sync@users.noreply.github.com"
+          git add NAMES
+          if ! git commit -m "sync NAMES (trigger: ${{ github.event.action }})" >/dev/null 2>&1; then
+            echo "NAMES trùng với index rồi (lượt khác đã sync) — bỏ qua"
+            exit 0
+          fi
+          # GitDB-style retry: lượt khác có thể đã push trước → pull --rebase
+          # rồi thử lại, tối đa 5 lần (ngăn mất cập nhật khi hai flow song song).
+          for attempt in 1 2 3 4 5; do
+            if [ "$attempt" -gt 1 ]; then
+              git pull --rebase --quiet origin HEAD || true
+              sleep 3
+            fi
+            if git push --quiet; then
+              echo "NAMES đã đẩy lên index (attempt $attempt)"
+              exit 0
+            fi
+            echo "push fail (attempt $attempt)"
+          done
+          echo "Không đẩy được NAMES sau 5 lượt — thất bại" >&2
+          exit 1
