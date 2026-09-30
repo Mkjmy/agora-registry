@@ -73,6 +73,20 @@ jobs:
             echo "::error::thiếu NAMES.pub trong index. Chạy 'agora names --keygen' và commit NAMES.pub, nếu không thì mọi client sẽ bỏ qua NAMES"
             exit 1
           fi
+          # NAMES.pub phải PARSE ĐƯỢC, không chỉ tồn tại. Trước đây guard chỉ
+          # check file có mặt nên NAMES.pub chứa nhầm dòng prompt (do redirect
+          # stdout của --keygen) vẫn lọt CI. Khi đó workflow vẫn "chạy xanh"
+          # trong khi mọi client đều fail decode và âm thầm bỏ qua xác minh —
+          # đúng trạng thái hỏng âm thầm mà guard này lẽ ra phải chặn.
+          #
+          # Ed25519 public key = 32 byte → base64 dài 44 ký tự, kết thúc '='.
+          # Dùng regex thay vì chạy agora ở guard (agora còn chưa được build ở
+          # bước này, và không muốn guard phụ thuộc binary chưa build).
+          if ! grep -qE '^[A-Za-z0-9+/]{43}=$' NAMES.pub; then
+            echo "::error::NAMES.pub KHÔNG phải public key Ed25519 hợp lệ (cần base64 44 ký tự). Nhiều khả năng đã redirect nhầm output của 'agora names --keygen'."
+            echo "::error::Sửa: chạy 'agora names --keygen 2>/dev/null > NAMES.pub' rồi commit lại."
+            exit 1
+          fi
 
       - name: Clone + build agora (app repo private → dùng admin token)
         env:
