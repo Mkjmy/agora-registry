@@ -1,3 +1,3 @@
-# Đường dẫn kho app agora mà workflow "sync-names" dùng để build CLI.
-# Tự động cập nhật bởi "agora rename" khi account của chủ app đổi tên.
+# The path to the agora app repository that the "sync-names" workflow builds the CLI from.
+# Updated automatically by "agora rename" when the app owner's account is renamed.
 Mkjmy/agora

@@ -1,41 +1,43 @@
 name: sync-names
 
-# "Danh sách tên" TẬP TRUNG của index: file NAMES
+# The index's "centralised name list": the NAMES file
 # (nickname | login | uid | owner | repo | repo-hash | registrant).
-# Sau mỗi sự kiện issue — register (opened), approve/reject
-# (labeled/unlabeled), rename (edited), reject+đóng (closed) — workflow này
-# tái sinh NAMES từ các issue member và commit về repo index. Người đọc lấy
-# file qua raw.githubusercontent: 1 request, không ăn rate limit.
+# After every issue event — register (opened), approve/reject
+# (labeled/unlabeled), rename (edited), reject+close (closed) — this workflow
+# regenerates NAMES from the member issues and commits it back to the index repo.
+# Readers fetch the file via raw.githubusercontent: 1 request, no rate limit eaten.
 #
-# VÌ SAO PHẢI KÝ: index là repo CÔNG KHAI, ai cũng mở issue được. Nếu NAMES
-# được đọc như "đã duyệt" mà không kiểm chứng, thì chỉ cần quyền mở issue là
-# chèn được một dòng giả và mọi client sẽ hiển thị nó như thành viên hợp lệ —
-# impersonation toàn hệ thống. Nên bot ở đây KÝ NAMES bằng Ed25519, và client
-# verify, fail-closed: thiếu NAMES.pub / sai chữ ký / thiếu chữ ký → bỏ NAMES,
-# đọc label từ issue thay vì tin file.
+# WHY IT MUST BE SIGNED: the index is a PUBLIC repo and anyone can open an issue.
+# If NAMES is read as "approved" without verification, merely having permission to
+# open an issue is enough to insert a fake line that every client then displays as a
+# valid member — system-wide impersonation. So the bot here SIGNS NAMES with
+# Ed25519, and clients verify, fail-closed: missing NAMES.pub / bad signature /
+# missing signature → drop NAMES and read labels from issues instead of trusting
+# the file.
 #
-# THIẾT LẬP MỘT LẦN (bắt buộc, nếu thiếu workflow sẽ fail):
-#   1. agora names --keygen            → lấy public key, commit thành NAMES.pub
+# ONE-TIME SETUP (required; without it the workflow fails):
+#   1. agora names --keygen            → take the public key, commit it as NAMES.pub
 #   2. gh secret set AGORA_SIGNING_KEY <private key>
-#   3. workflow chạy lại sẽ tự sinh NAMES đã ký.
+#   3. re-running the workflow generates the signed NAMES itself.
 
 on:
   issues:
     types: [opened, edited, closed, labeled, unlabeled]
   workflow_dispatch:
 
-# Chỉ chạy MỘT lượt sync mỗi lúc (đề phòng nhiều event issue trùng giờ);
-# lượt mới đợi lượt cũ xong thay vì bị huỷ giữa chừng. Kết hợp với vòng
-# pull --rebase + push retry bên dưới để không bao giờ "lost update" khi hai
-# lượt chạy song song.
+# Only ONE sync run at a time (guarding against several issue events landing at
+# the same moment); a new run waits for the old one to finish instead of being
+# cancelled midway. Combined with the pull --rebase + push retry loop below so a
+# "lost update" can never happen when two runs overlap.
 concurrency:
   group: sync-names
   cancel-in-progress: false
 
-# Token mặc định của workflow này có quyền ghi contents — tức nó ĐỨNG ĐƯỢC ký
-# NAMES. Đó là chủ ý (bot phải ký được), nên phải giới hạn phạm vi: chỉ chạy từ
-# index của admin, và trigger ở trên chỉ là issue event, không có input nào từ
-# người lạ. Nếu thêm input của người dùng, phải kiểm tra lại chỗ này.
+# This workflow's default token has contents:write — that is, it is CAPABLE of
+# signing NAMES. That is deliberate (the bot has to be able to sign), so the scope
+# must be limited: run only from the admin's index, and the triggers above are
+# only issue events, with no input from strangers. If you ever add user input,
+# revisit this.
 permissions:
   contents: write
 
@@ -43,52 +45,57 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      # Pin theo SHA (kèm comment phiên bản) thay vì tag di động: @v4 có thể bị
-      # đổi nội dung, tag bị xoá/tạo lại, hoặc commit của action bị chèn nhánh.
-      # Pin SHA là cách duy nhất biết đang chạy đúng code mình đã đọc.
+      # Pinned by SHA (with a version comment) instead of a floating tag: @v4 can
+      # have its contents changed, a tag can be deleted/recreated, or the action's
+      # commit can gain new branches. Pinning the SHA is the only way to know you
+      # are running exactly the code you read.
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "stable"
 
-      - name: Guard — chỉ index của admin được ký
+      - name: Guard — only the admin's index may be signed
         env:
-          # github.event.issue.title do người bất kỳ kiểm soát. Nó KHÔNG được
-          # nội suy thẳng vào `run:` — sẽ thành command injection (issue title
-          # chứa `$(...)`, backtick, `;` là chạy được lệnh tuỳ ý trong runner,
-          # với token ghi contents trong tay). Xem bước "Sync NAMES" bên dưới:
-          # chỉ dùng title để GHI VÀO BIẾN MÔI TRƯỜNG, không dùng làm lệnh.
+          # github.event.issue.title is controlled by anyone. It must NOT be
+          # interpolated straight into `run:` — that is command injection (an issue
+          # title containing `$(...)`, a backtick or `;` can run arbitrary commands
+          # on the runner, holding a contents:write token). See the "Sync NAMES"
+          # step below: the title is only used to WRITE INTO AN ENVIRONMENT
+          # VARIABLE, never as a command.
           ADMIN_REPO: ${{ vars.AGORA_ADMIN_REPO }}
         run: |
           if [ -z "$ADMIN_REPO" ]; then
-            echo "::error::thiếu repository variable AGORA_ADMIN_REPO — workflow sẽ bị bỏ qua vì không biết repo nào được phép ký NAMES"
+            echo "::error::missing repository variable AGORA_ADMIN_REPO — the workflow will be skipped because it does not know which repo may sign NAMES"
             exit 1
           fi
           if [ "$GITHUB_REPOSITORY" != "$ADMIN_REPO" ]; then
-            echo "::error::repo này ($GITHUB_REPOSITORY) không phải index của admin ($ADMIN_REPO) — từ chối ký"
+            echo "::error::this repo ($GITHUB_REPOSITORY) is not the admin's index ($ADMIN_REPO) — refusing to sign"
             exit 1
           fi
           if [ ! -f NAMES.pub ]; then
-            echo "::error::thiếu NAMES.pub trong index. Chạy 'agora names --keygen' và commit NAMES.pub, nếu không thì mọi client sẽ bỏ qua NAMES"
+            echo "::error::no NAMES.pub in the index. Run 'agora names --keygen' and commit NAMES.pub, otherwise every client will ignore NAMES"
             exit 1
           fi
-          # NAMES.pub phải PARSE ĐƯỢC, không chỉ tồn tại. Trước đây guard chỉ
-          # check file có mặt nên NAMES.pub chứa nhầm dòng prompt (do redirect
-          # stdout của --keygen) vẫn lọt CI. Khi đó workflow vẫn "chạy xanh"
-          # trong khi mọi client đều fail decode và âm thầm bỏ qua xác minh —
-          # đúng trạng thái hỏng âm thầm mà guard này lẽ ra phải chặn.
+          # NAMES.pub must PARSE, not merely exist. The guard used to only check
+          # that the file was present, so a NAMES.pub accidentally containing the
+          # prompt line (from redirecting --keygen's stdout) still passed CI. Then
+          # the workflow would "go green" while every client failed to decode and
+          # silently skipped verification — exactly the silent-corruption state this
+          # guard is supposed to block.
           #
-          # Ed25519 public key = 32 byte → base64 dài 44 ký tự, kết thúc '='.
-          # Dùng regex thay vì chạy agora ở guard (agora còn chưa được build ở
-          # bước này, và không muốn guard phụ thuộc binary chưa build).
+          # An Ed25519 public key = 32 bytes → base64 is 44 characters long, ending
+          # in '='.
+          # A regex is used instead of running agora in the guard (agora has not
+          # been built at this step, and the guard should not depend on an unbuilt
+          # binary).
           if ! grep -qE '^[A-Za-z0-9+/]{43}=$' NAMES.pub; then
-            echo "::error::NAMES.pub KHÔNG phải public key Ed25519 hợp lệ (cần base64 44 ký tự). Nhiều khả năng đã redirect nhầm output của 'agora names --keygen'."
-            echo "::error::Sửa: chạy 'agora names --keygen 2>/dev/null > NAMES.pub' rồi commit lại."
+            echo "::error::NAMES.pub is NOT a valid Ed25519 public key (needs 44 base64 characters). Most likely the output of 'agora names --keygen' was redirected by mistake."
+            echo "::error::Fix: run 'agora names --keygen 2>/dev/null > NAMES.pub' and commit again."
             exit 1
           fi
 
-      - name: Clone + build agora (app repo private → dùng admin token)
+      - name: Clone + build agora (private app repo → use the admin token)
         env:
           AGORA_ADMIN_TOKEN: ${{ secrets.AGORA_ADMIN_TOKEN }}
         run: |
@@ -96,20 +103,21 @@ jobs:
           APP_REPO="$(grep -v '^#' APP_REPO 2>/dev/null | head -1 || true)"
           [ -n "$APP_REPO" ] || APP_REPO="Mkjmy/agora"
 
-          # Token KHÔNG được đưa vào argv.
+          # The token must NOT be passed in argv.
           #
-          # - URL có token: nằm trong argv, git còn ghi vào .git/config.
-          # - `git -c http.extraheader=AUTHORIZATION:basic <base64>`: cũng nằm
-          #   trong argv! Comment cũ của file này bảo là "truyền qua env, không
-          #   vào argv" — sai. /proc/*/cmdline là world-readable trên Linux, mọi
-          #   tiến trình khác trên runner đọc được, kể cả tiến trình của pull
-          #   request chạy song song.
-          # - `git -c ... $(...)` với lệnh con: token còn nằm trong argv của
-          #   lệnh con đó nữa.
+          # - A URL containing the token: it sits in argv, and git also writes it
+          #   into .git/config.
+          # - `git -c http.extraheader=AUTHORIZATION:basic <base64>`: also in argv!
+          #   An older comment in this file claimed "passed via env, not argv" —
+          #   wrong. /proc/*/cmdline is world-readable on Linux, so every other
+          #   process on the runner can read it, including a concurrently running
+          #   pull-request process.
+          # - `git -c ... $(...)` with a subcommand: the token also lands in that
+          #   subcommand's argv.
           #
-          # GIT_ASKPASS: git gọi chương trình hỏi mật khẩu, token chỉ nằm trong
-          # env của chính tiến trình git/askpass, không xuất hiện trong bất kỳ
-          # argv nào, và không được ghi xuống đĩa.
+          # GIT_ASKPASS: git invokes a program to ask for the password, so the token
+          # only lives in the env of the git/askpass processes themselves, never
+          # appears in any argv, and is never written to disk.
           mkdir -p "$RUNNER_TEMP/askpass"
           cat > "$RUNNER_TEMP/askpass/ask.sh" <<'EOS'
           #!/bin/sh
@@ -127,25 +135,25 @@ jobs:
 
           (cd app && go build -o ../agora ./cmd/agora)
 
-          # Xoá sạch sớm: token cũng nằm trong /proc/*/environ của các tiến
-          # trình đã kết thúc, không thu hồi được — giảm cửa sổ thời gian.
+          # Clean up early: the token is also in /proc/*/environ of finished
+          # processes and cannot be revoked — shrink that window.
           rm -f "$RUNNER_TEMP/askpass/ask.sh"
           unset AGORA_ADMIN_TOKEN GIT_AUTH_USERNAME
           rm -rf app
 
-      - name: Sync NAMES (ký)
+      - name: Sync NAMES (sign)
         env:
           AGORA_SIGNING_KEY: ${{ secrets.AGORA_SIGNING_KEY }}
-          # Chỉ đưa vào env để dùng cho LOG (mọi biến môi trường của workflow đều
-          # được in ra kèm log nếu workflow log bật). Không nội suy ${{ }} trực
-          # tiếp vào câu lệnh shell.
+          # Only passed via env for use in the LOG (every workflow env var is
+          # printed in the log when workflow logging is on). ${{ }} is never
+          # interpolated directly into the shell command.
           TRIGGER: ${{ github.event.action }}
           TRIGGER_ISSUE: ${{ github.event.issue.title }}
         run: |
           set -euo pipefail
           ./agora names --index "${GITHUB_REPOSITORY}" --sign > NAMES.new
           if cmp -s NAMES NAMES.new; then
-            echo "NAMES không đổi — bỏ qua"
+            echo "NAMES unchanged — skipping"
             exit 0
           fi
           mv NAMES.new NAMES
@@ -153,21 +161,21 @@ jobs:
           git config user.email "agora-sync@users.noreply.github.com"
           git add NAMES
           if ! git commit -m "sync NAMES (trigger: ${TRIGGER:-manual}, issue: ${TRIGGER_ISSUE:-none})" >/dev/null 2>&1; then
-            echo "NAMES trùng với index rồi (lượt khác đã sync) — bỏ qua"
+            echo "NAMES already matches the index (another run synced it) — skipping"
             exit 0
           fi
-          # GitDB-style retry: lượt khác có thể đã push trước → pull --rebase
-          # rồi thử lại, tối đa 5 lần (ngăn mất cập nhật khi hai flow song song).
+          # GitDB-style retry: another run may have pushed first → pull --rebase and
+          # try again, at most 5 times (prevents lost updates with two flows racing).
           for attempt in 1 2 3 4 5; do
             if [ "$attempt" -gt 1 ]; then
               git pull --rebase --quiet origin HEAD || true
               sleep 3
             fi
             if git push --quiet; then
-              echo "NAMES đã đẩy lên index (attempt ${attempt})"
+              echo "NAMES pushed to the index (attempt ${attempt})"
               exit 0
             fi
             echo "push fail (attempt ${attempt})"
           done
-          echo "Không đẩy được NAMES sau 5 lượt — thất bại" >&2
+          echo "Could not push NAMES after 5 attempts — giving up" >&2
           exit 1
